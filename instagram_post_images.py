@@ -26,7 +26,6 @@ def posting_images(login, password, directory, json_filename):
     bot.upload_photo(file_path, caption=caption)
 
     if bot.api.last_response.status_code != 200:
-      # print(bot.api.last_response)
       break
 
     files_info[filename]["posted"] = True

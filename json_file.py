@@ -6,7 +6,7 @@ def load_file(directory, filename):
     file_path = '{}/{}'.format(directory, filename)
     with open(file_path, "r") as json_file:
         file_contents = json.load(json_file)
-  except Exception:
+  except FileNotFoundError:
     file_contents = {}
   return file_contents
 

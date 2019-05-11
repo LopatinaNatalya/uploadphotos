@@ -4,15 +4,17 @@ from dotenv import load_dotenv
 
 def get_image(file_path, url):
   response = requests.get(url)
-  with open(file_path, 'wb') as file:
-      file.write(response.content)
+  if response.ok:
+      with open(file_path, 'wb') as file:
+          file.write(response.content)
 
 
 def fetch_hubble_collection_image_ides(collection_name):
     response = requests.get("http://hubblesite.org/api/v3/images?page=all&collection_name={}".format(collection_name))
     images_id = []
-    for collection_name in  response.json():
-        images_id.append(collection_name['id'])
+    if response.ok:
+        for collection_name in  response.json():
+            images_id.append(collection_name['id'])
 
     return images_id
 
@@ -20,32 +22,33 @@ def fetch_hubble_collection_image_ides(collection_name):
 def get_hubble_images(directory, json_filename, image_ides):
     for image_id in image_ides:
         hubble_urls = fetch_hubble_images(directory, json_filename, image_id)
-        url = hubble_urls[-1]
-        small_filename = url.split('/')[-1]
 
-        file_path = "{}/{}_{}".format(directory, image_id, small_filename)
-        print(file_path)
-        get_image(file_path, url)
+        if hubble_urls:
+            url = hubble_urls[-1]
+            small_filename = url.split('/')[-1]
+
+            file_path = "{}/{}_{}".format(directory, image_id, small_filename)
+            get_image(file_path, url)
 
 
 def fetch_hubble_images(directory, json_filename, image_id):
     response = requests.get("http://hubblesite.org/api/v3/image/{}".format(image_id))
-    description = response.json()['name']
-
     urls = []
-    files_info = json_file.load_file(directory, json_filename)
-    for url in response.json()['image_files']:
-        urls.append(url['file_url'])
-        small_filename = url['file_url'].split('/')[-1]
-        filename = "{}_{}".format(image_id, small_filename)
+    if response.ok:
+         description = response.json()['name']
 
-        if filename not in files_info:
-            files_info[filename] = {
-                "caption": description,
-                "posted": False
-            }
-    json_file.write_file(directory, json_filename, files_info)
+         files_info = json_file.load_file(directory, json_filename)
+         for url in response.json()['image_files']:
+             urls.append(url['file_url'])
+             small_filename = url['file_url'].split('/')[-1]
+             filename = "{}_{}".format(image_id, small_filename)
 
+             if filename not in files_info:
+                 files_info[filename] = {
+                        "caption": description,
+                        "posted": False
+                 }
+             json_file.write_file(directory, json_filename, files_info)
     return urls
 
 
